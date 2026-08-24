@@ -2,10 +2,6 @@
  * 까스활명수 오피스 3기 — 데이터 설정
  *
  * 매주 유닛원이 달라지므로, 여기서만 수정하면 됩니다.
- * - members: 유닛 참여자 목록
- * - weeks: 주차별 미션 내용 (과제 현황판과 연동)
- * - currentWeek: 현재 주차
- * - deadline / deadlineLabel: 이번 주 마감
  */
 
 export type MemberStatus = "waiting" | "submitted" | "watching";
@@ -16,7 +12,7 @@ export type Member = {
   name: string;
   role: MemberRole;
   status: MemberStatus;
-  submissionUrl?: string; // 제출물 링크
+  submissionUrl?: string;
 };
 
 export type WeekMission = {
@@ -38,8 +34,22 @@ export const MEMBERS: Member[] = [
   // 감독관
   { nick: "다니", name: "송다은", role: "감독관", status: "watching" },
 
-  // 유닛 멤버 — 매주 이 목록을 업데이트하세요
-  // { nick: "닉네임", name: "이름", role: "멤버", status: "waiting" },
+  // 유닛 멤버
+  { nick: "헤이", name: "윤민홍", role: "멤버", status: "waiting" },
+  { nick: "말디니", name: "박진형", role: "멤버", status: "waiting" },
+  { nick: "레미", name: "최주희", role: "멤버", status: "waiting" },
+  { nick: "브라운", name: "이정근", role: "멤버", status: "waiting" },
+  { nick: "테리", name: "강태호", role: "멤버", status: "waiting" },
+  { nick: "찌니", name: "신진영", role: "멤버", status: "waiting" },
+  { nick: "써니", name: "박수연", role: "멤버", status: "waiting" },
+  { nick: "웃는돌", name: "장경아", role: "멤버", status: "waiting" },
+  { nick: "해운대유진", name: "김병학", role: "멤버", status: "waiting" },
+  { nick: "카라", name: "최강훈", role: "멤버", status: "waiting" },
+  { nick: "제프", name: "이재필", role: "멤버", status: "waiting" },
+  { nick: "이카루스", name: "이창민", role: "멤버", status: "waiting" },
+  { nick: "양세", name: "박세현", role: "멤버", status: "waiting" },
+  { nick: "선샤인", name: "엄지혜", role: "멤버", status: "waiting" },
+  { nick: "샘", name: "이승민", role: "멤버", status: "waiting" },
 ];
 
 // ─── 주차별 미션 ───

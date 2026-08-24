@@ -6,7 +6,6 @@ import {
   DEADLINE_LABEL,
   DEADLINE_ISO,
   MEMBERS,
-  MISSIONS_URL,
   WEEKS,
   type Member,
 } from "./data";
@@ -97,7 +96,6 @@ function MemberModal({ member, onClose }: { member: Member; onClose: () => void 
             <p className="text-sm text-gray-500">{member.name}</p>
           </div>
         </div>
-
         <div className="space-y-2 mb-5">
           <div className="flex items-center gap-2 text-sm">
             <span>상태:</span>
@@ -106,21 +104,12 @@ function MemberModal({ member, onClose }: { member: Member; onClose: () => void 
             </span>
           </div>
           {member.submissionUrl && (
-            <a
-              href={member.submissionUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-sm text-blue-500 hover:underline"
-            >
+            <a href={member.submissionUrl} target="_blank" rel="noopener noreferrer" className="block text-sm text-blue-500 hover:underline">
               제출물 보기 →
             </a>
           )}
         </div>
-
-        <button
-          onClick={onClose}
-          className="w-full py-2.5 rounded-xl bg-gray-100 text-sm font-bold hover:bg-gray-200 transition"
-        >
+        <button onClick={onClose} className="w-full py-2.5 rounded-xl bg-gray-100 text-sm font-bold hover:bg-gray-200 transition">
           닫기
         </button>
       </div>
@@ -142,7 +131,6 @@ function BambooForest() {
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
   const [openReply, setOpenReply] = useState<string | null>(null);
 
-  // localStorage 로드
   useEffect(() => {
     try {
       const saved = localStorage.getItem("bamboo-posts");
@@ -150,7 +138,6 @@ function BambooForest() {
     } catch { /* 무시 */ }
   }, []);
 
-  // localStorage 저장
   function save(updated: BambooPost[]) {
     setPosts(updated);
     try { localStorage.setItem("bamboo-posts", JSON.stringify(updated)); } catch { /* 무시 */ }
@@ -159,31 +146,18 @@ function BambooForest() {
   function addPost() {
     const text = input.trim();
     if (!text) return;
-    const post: BambooPost = {
-      id: Date.now().toString(),
-      text,
-      replies: [],
-      createdAt: new Date().toISOString(),
-    };
-    save([post, ...posts]);
+    save([{ id: Date.now().toString(), text, replies: [], createdAt: new Date().toISOString() }, ...posts]);
     setInput("");
   }
 
   function addReply(postId: string) {
     const text = (replyInputs[postId] ?? "").trim();
     if (!text) return;
-    const updated = posts.map((p) =>
+    save(posts.map((p) =>
       p.id === postId
-        ? {
-            ...p,
-            replies: [
-              ...p.replies,
-              { id: Date.now().toString(), text, createdAt: new Date().toISOString() },
-            ],
-          }
+        ? { ...p, replies: [...p.replies, { id: Date.now().toString(), text, createdAt: new Date().toISOString() }] }
         : p,
-    );
-    save(updated);
+    ));
     setReplyInputs((prev) => ({ ...prev, [postId]: "" }));
     setOpenReply(null);
   }
@@ -199,99 +173,112 @@ function BambooForest() {
   }
 
   return (
-    <div className="bg-[#F0F7F0] rounded-2xl border border-green-200 p-5 mt-6">
-      {/* 헤더 */}
-      <div className="text-center mb-5">
-        <h2 className="font-extrabold text-lg">🎋 까스활명수 대나무숲</h2>
-        <p className="text-sm text-gray-600 mt-1 font-bold">무엇이든 물어보세요</p>
-        <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-          &ldquo;임금님 귀는 당나귀 귀&rdquo;처럼,<br />
-          여기선 속에 있는 말을 그냥 외치면 돼요
-        </p>
-        <div className="flex justify-center gap-4 mt-3 text-xs text-gray-500">
-          <span>🙈 아무도 안 놀라요</span>
-          <span>🔁 두 번 물어봐도 돼요</span>
-          <span>🫂 지나가던 사람이 답을 주고 가요</span>
+    <div className="relative rounded-2xl overflow-hidden mb-6">
+      {/* 칠판 배경 */}
+      <div className="bg-[#2D5016] p-5 pb-6">
+        {/* 칠판 프레임 */}
+        <div className="border-4 border-[#8B6914] rounded-xl p-5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.3)]">
+          {/* 헤더 — 분필 느낌 */}
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-extrabold text-[#F5F0E0]" style={{ textShadow: "0 0 6px rgba(245,240,224,0.3)" }}>
+              🎋 까스활명수 대나무숲
+            </h2>
+            <p className="text-sm text-[#C8E6A0] mt-1 font-bold">무엇이든 물어보세요</p>
+            <p className="text-xs text-[#A0C878] mt-2 leading-relaxed">
+              &ldquo;임금님 귀는 당나귀 귀&rdquo;처럼,<br />
+              여기선 속에 있는 말을 그냥 외치면 돼요
+            </p>
+          </div>
+
+          {/* 안내 배지 */}
+          <div className="flex justify-center gap-3 mb-4">
+            <span className="text-[11px] text-[#C8E6A0] bg-[#1A3A08] px-2.5 py-1 rounded-full">🙈 아무도 안 놀라요</span>
+            <span className="text-[11px] text-[#C8E6A0] bg-[#1A3A08] px-2.5 py-1 rounded-full">🔁 두 번 물어봐도 돼요</span>
+            <span className="text-[11px] text-[#C8E6A0] bg-[#1A3A08] px-2.5 py-1 rounded-full">🫂 지나가던 사람이 답해요</span>
+          </div>
+
+          {/* 입력 */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addPost()}
+              placeholder="막힌 곳, 궁금한 것, 하고 싶은 말..."
+              className="flex-1 px-4 py-2.5 rounded-lg bg-[#1A3A08] border border-[#3D6B1E] text-sm text-[#F5F0E0] placeholder:text-[#6B8F50] focus:outline-none focus:border-[#8BC34A]"
+            />
+            <button
+              onClick={addPost}
+              className="shrink-0 px-4 py-2.5 rounded-lg bg-[#8BC34A] text-[#1A3A08] text-sm font-extrabold hover:bg-[#9CCC65] transition"
+            >
+              외치기 🎋
+            </button>
+          </div>
+
+          {/* 글 목록 (칠판 위에) */}
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {posts.length === 0 && (
+              <p className="text-sm text-[#6B8F50] text-center py-6">
+                아직 아무도 외치지 않았어요.<br />
+                첫 번째 대나무가 되어주세요 🎋
+              </p>
+            )}
+            {posts.map((post) => (
+              <div key={post.id} className="bg-[#1A3A08]/60 rounded-lg border border-[#3D6B1E] p-3">
+                <p className="text-sm text-[#E8E0D0]">{post.text}</p>
+                <div className="flex items-center gap-3 mt-1.5">
+                  <span className="text-[10px] text-[#6B8F50]">{timeAgo(post.createdAt)}</span>
+                  <button
+                    onClick={() => setOpenReply(openReply === post.id ? null : post.id)}
+                    className="text-[10px] text-[#8BC34A] font-bold hover:underline"
+                  >
+                    💬 답글 {post.replies.length > 0 && `(${post.replies.length})`}
+                  </button>
+                </div>
+                {post.replies.length > 0 && (
+                  <div className="mt-2 pl-3 border-l-2 border-[#3D6B1E] space-y-1.5">
+                    {post.replies.map((r) => (
+                      <div key={r.id} className="text-xs text-[#A0C878]">
+                        <span>{r.text}</span>
+                        <span className="text-[#6B8F50] ml-2">{timeAgo(r.createdAt)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {openReply === post.id && (
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={replyInputs[post.id] ?? ""}
+                      onChange={(e) => setReplyInputs((prev) => ({ ...prev, [post.id]: e.target.value }))}
+                      onKeyDown={(e) => e.key === "Enter" && addReply(post.id)}
+                      placeholder="답글 달기..."
+                      className="flex-1 px-3 py-1.5 rounded-md bg-[#1A3A08] border border-[#3D6B1E] text-xs text-[#F5F0E0] placeholder:text-[#6B8F50] focus:outline-none focus:border-[#8BC34A]"
+                    />
+                    <button onClick={() => addReply(post.id)} className="shrink-0 px-3 py-1.5 rounded-md bg-[#3D6B1E] text-[#C8E6A0] text-xs font-bold hover:bg-[#4A7D24] transition">
+                      답글
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* 입력 */}
-      <div className="flex gap-2 mb-5">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addPost()}
-          placeholder="막힌 곳, 궁금한 것, 하고 싶은 말..."
-          className="flex-1 px-4 py-2.5 rounded-xl border border-green-200 bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-400"
-        />
-        <button
-          onClick={addPost}
-          className="shrink-0 px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition"
-        >
-          외치기
-        </button>
+      {/* 칠판 받침대 */}
+      <div className="h-3 bg-gradient-to-b from-[#8B6914] to-[#6B5010] rounded-b-xl" />
+
+      {/* 칠판 밑 캐릭터들 */}
+      <div className="flex justify-center gap-1 -mt-1 text-2xl">
+        <span title="막힌 곳을 어떻게 설명해야 할지 몰라도 괜찮아요">🧽</span>
+        <span title="슬랙 #까스활명수 채널에 한 줄 던져도 됩니다">🐙</span>
+        <span title="편한 쪽으로 오세요">⭐</span>
+        <span title="지나가던 사람이 답을 주고 가요">🦀</span>
+        <span title="아무도 안 놀라요">🐿️</span>
       </div>
-
-      {/* 글 목록 */}
-      <div className="space-y-3">
-        {posts.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-6">
-            아직 아무도 외치지 않았어요.<br />
-            첫 번째 대나무가 되어주세요 🎋
-          </p>
-        )}
-        {posts.map((post) => (
-          <div key={post.id} className="bg-white rounded-xl border border-green-100 p-4">
-            <p className="text-sm">{post.text}</p>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="text-[10px] text-gray-400">{timeAgo(post.createdAt)}</span>
-              <button
-                onClick={() => setOpenReply(openReply === post.id ? null : post.id)}
-                className="text-[10px] text-green-600 font-bold hover:underline"
-              >
-                💬 답글 {post.replies.length > 0 && `(${post.replies.length})`}
-              </button>
-            </div>
-
-            {/* 답글 */}
-            {post.replies.length > 0 && (
-              <div className="mt-3 pl-3 border-l-2 border-green-100 space-y-2">
-                {post.replies.map((r) => (
-                  <div key={r.id} className="text-xs text-gray-600">
-                    <span>{r.text}</span>
-                    <span className="text-gray-300 ml-2">{timeAgo(r.createdAt)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 답글 입력 */}
-            {openReply === post.id && (
-              <div className="flex gap-2 mt-3">
-                <input
-                  type="text"
-                  value={replyInputs[post.id] ?? ""}
-                  onChange={(e) => setReplyInputs((prev) => ({ ...prev, [post.id]: e.target.value }))}
-                  onKeyDown={(e) => e.key === "Enter" && addReply(post.id)}
-                  placeholder="답글 달기..."
-                  className="flex-1 px-3 py-2 rounded-lg border border-green-200 bg-white text-xs placeholder:text-gray-400 focus:outline-none focus:border-green-400"
-                />
-                <button
-                  onClick={() => addReply(post.id)}
-                  className="shrink-0 px-3 py-2 rounded-lg bg-green-100 text-green-700 text-xs font-bold hover:bg-green-200 transition"
-                >
-                  답글
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* 안내 */}
-      <p className="text-[10px] text-gray-400 text-center mt-4">
-        막힌 곳을 어떻게 설명해야 할지 몰라도 괜찮아요. 슬랙 #까스활명수 채널에 한 줄 던져도 됩니다.
+      <p className="text-[10px] text-gray-400 text-center mt-1">
+        막힌 곳을 어떻게 설명해야 할지 몰라도 괜찮아요 · 슬랙 #까스활명수 채널에 한 줄 던져도 됩니다
       </p>
     </div>
   );
@@ -330,15 +317,8 @@ export default function OfficePage() {
         </p>
       </div>
 
-      {/* 과제 현황판 연동 */}
-      <a
-        href={MISSIONS_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full mb-6 px-4 py-3 rounded-xl border-2 border-[#1A1A1A] bg-[#E9ED12] font-extrabold text-sm hover:opacity-90 transition"
-      >
-        🎯 전체 과제 현황판 보기 →
-      </a>
+      {/* 🎋 대나무숲 (칠판 + 캐릭터) */}
+      <BambooForest />
 
       {/* 주차 탭 */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6">
@@ -409,9 +389,7 @@ export default function OfficePage() {
         {/* 감독관 */}
         {admins.length > 0 && (
           <div className="mb-3">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-              감독관
-            </p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">감독관</p>
             <div className="space-y-2">
               {admins.map((m) => (
                 <MemberCard key={m.nick} member={m} onClick={() => setSelectedMember(m)} />
@@ -423,9 +401,7 @@ export default function OfficePage() {
         {/* 멤버 */}
         {regulars.length > 0 && (
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 mt-4">
-              멤버
-            </p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 mt-4">멤버</p>
             <div className="space-y-2">
               {regulars.map((m) => (
                 <MemberCard key={m.nick} member={m} onClick={() => setSelectedMember(m)} />
@@ -433,17 +409,7 @@ export default function OfficePage() {
             </div>
           </div>
         )}
-
-        {regulars.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-8">
-            아직 이번 주 유닛 멤버가 등록되지 않았어요.<br />
-            감독관이 멤버를 추가하면 여기에 나타납니다.
-          </p>
-        )}
       </div>
-
-      {/* 대나무숲 */}
-      <BambooForest />
 
       {/* 푸터 */}
       <footer className="text-center text-xs text-gray-300 mt-8 pb-8">
