@@ -128,6 +128,175 @@ function MemberModal({ member, onClose }: { member: Member; onClose: () => void 
   );
 }
 
+// ─── 대나무숲 게시판 ───
+type BambooPost = {
+  id: string;
+  text: string;
+  replies: { id: string; text: string; createdAt: string }[];
+  createdAt: string;
+};
+
+function BambooForest() {
+  const [posts, setPosts] = useState<BambooPost[]>([]);
+  const [input, setInput] = useState("");
+  const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
+  const [openReply, setOpenReply] = useState<string | null>(null);
+
+  // localStorage 로드
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("bamboo-posts");
+      if (saved) setPosts(JSON.parse(saved));
+    } catch { /* 무시 */ }
+  }, []);
+
+  // localStorage 저장
+  function save(updated: BambooPost[]) {
+    setPosts(updated);
+    try { localStorage.setItem("bamboo-posts", JSON.stringify(updated)); } catch { /* 무시 */ }
+  }
+
+  function addPost() {
+    const text = input.trim();
+    if (!text) return;
+    const post: BambooPost = {
+      id: Date.now().toString(),
+      text,
+      replies: [],
+      createdAt: new Date().toISOString(),
+    };
+    save([post, ...posts]);
+    setInput("");
+  }
+
+  function addReply(postId: string) {
+    const text = (replyInputs[postId] ?? "").trim();
+    if (!text) return;
+    const updated = posts.map((p) =>
+      p.id === postId
+        ? {
+            ...p,
+            replies: [
+              ...p.replies,
+              { id: Date.now().toString(), text, createdAt: new Date().toISOString() },
+            ],
+          }
+        : p,
+    );
+    save(updated);
+    setReplyInputs((prev) => ({ ...prev, [postId]: "" }));
+    setOpenReply(null);
+  }
+
+  function timeAgo(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "방금";
+    if (m < 60) return `${m}분 전`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}시간 전`;
+    return `${Math.floor(h / 24)}일 전`;
+  }
+
+  return (
+    <div className="bg-[#F0F7F0] rounded-2xl border border-green-200 p-5 mt-6">
+      {/* 헤더 */}
+      <div className="text-center mb-5">
+        <h2 className="font-extrabold text-lg">🎋 까스활명수 대나무숲</h2>
+        <p className="text-sm text-gray-600 mt-1 font-bold">무엇이든 물어보세요</p>
+        <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+          &ldquo;임금님 귀는 당나귀 귀&rdquo;처럼,<br />
+          여기선 속에 있는 말을 그냥 외치면 돼요
+        </p>
+        <div className="flex justify-center gap-4 mt-3 text-xs text-gray-500">
+          <span>🙈 아무도 안 놀라요</span>
+          <span>🔁 두 번 물어봐도 돼요</span>
+          <span>🫂 지나가던 사람이 답을 주고 가요</span>
+        </div>
+      </div>
+
+      {/* 입력 */}
+      <div className="flex gap-2 mb-5">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addPost()}
+          placeholder="막힌 곳, 궁금한 것, 하고 싶은 말..."
+          className="flex-1 px-4 py-2.5 rounded-xl border border-green-200 bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:border-green-400"
+        />
+        <button
+          onClick={addPost}
+          className="shrink-0 px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition"
+        >
+          외치기
+        </button>
+      </div>
+
+      {/* 글 목록 */}
+      <div className="space-y-3">
+        {posts.length === 0 && (
+          <p className="text-sm text-gray-400 text-center py-6">
+            아직 아무도 외치지 않았어요.<br />
+            첫 번째 대나무가 되어주세요 🎋
+          </p>
+        )}
+        {posts.map((post) => (
+          <div key={post.id} className="bg-white rounded-xl border border-green-100 p-4">
+            <p className="text-sm">{post.text}</p>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-[10px] text-gray-400">{timeAgo(post.createdAt)}</span>
+              <button
+                onClick={() => setOpenReply(openReply === post.id ? null : post.id)}
+                className="text-[10px] text-green-600 font-bold hover:underline"
+              >
+                💬 답글 {post.replies.length > 0 && `(${post.replies.length})`}
+              </button>
+            </div>
+
+            {/* 답글 */}
+            {post.replies.length > 0 && (
+              <div className="mt-3 pl-3 border-l-2 border-green-100 space-y-2">
+                {post.replies.map((r) => (
+                  <div key={r.id} className="text-xs text-gray-600">
+                    <span>{r.text}</span>
+                    <span className="text-gray-300 ml-2">{timeAgo(r.createdAt)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 답글 입력 */}
+            {openReply === post.id && (
+              <div className="flex gap-2 mt-3">
+                <input
+                  type="text"
+                  value={replyInputs[post.id] ?? ""}
+                  onChange={(e) => setReplyInputs((prev) => ({ ...prev, [post.id]: e.target.value }))}
+                  onKeyDown={(e) => e.key === "Enter" && addReply(post.id)}
+                  placeholder="답글 달기..."
+                  className="flex-1 px-3 py-2 rounded-lg border border-green-200 bg-white text-xs placeholder:text-gray-400 focus:outline-none focus:border-green-400"
+                />
+                <button
+                  onClick={() => addReply(post.id)}
+                  className="shrink-0 px-3 py-2 rounded-lg bg-green-100 text-green-700 text-xs font-bold hover:bg-green-200 transition"
+                >
+                  답글
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* 안내 */}
+      <p className="text-[10px] text-gray-400 text-center mt-4">
+        막힌 곳을 어떻게 설명해야 할지 몰라도 괜찮아요. 슬랙 #까스활명수 채널에 한 줄 던져도 됩니다.
+      </p>
+    </div>
+  );
+}
+
 // ─── 메인 페이지 ───
 export default function OfficePage() {
   const [selectedWeek, setSelectedWeek] = useState(CURRENT_WEEK);
@@ -272,6 +441,9 @@ export default function OfficePage() {
           </p>
         )}
       </div>
+
+      {/* 대나무숲 */}
+      <BambooForest />
 
       {/* 푸터 */}
       <footer className="text-center text-xs text-gray-300 mt-8 pb-8">
