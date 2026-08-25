@@ -606,6 +606,130 @@ function BottleProgress({
   );
 }
 
+// ─── 오늘의 다짐 (모각공) ───
+type Pledge = {
+  id: string;
+  author: string;
+  text: string;
+  verified: boolean;
+  createdAt: string;
+};
+
+function PledgeBoard() {
+  const [pledges, setPledges] = useState<Pledge[]>([]);
+  const [author, setAuthor] = useState("");
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("office3-pledges");
+      if (saved) setPledges(JSON.parse(saved));
+    } catch { /* 무시 */ }
+  }, []);
+
+  function save(updated: Pledge[]) {
+    setPledges(updated);
+    try { localStorage.setItem("office3-pledges", JSON.stringify(updated)); } catch { /* 무시 */ }
+  }
+
+  function addPledge() {
+    const t = text.trim();
+    const a = author.trim();
+    if (!t || !a) return;
+    save([
+      ...pledges,
+      { id: Date.now().toString(), author: a, text: t, verified: false, createdAt: new Date().toISOString() },
+    ]);
+    setText("");
+  }
+
+  function toggleVerify(id: string) {
+    save(pledges.map((p) => p.id === id ? { ...p, verified: !p.verified } : p));
+  }
+
+  function formatTime(iso: string) {
+    const d = new Date(iso);
+    return new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul",
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(d);
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#E8E0D0] p-5">
+      {/* 헤더 */}
+      <div className="flex items-center gap-2 mb-1">
+        <h2 className="font-extrabold text-lg">🔥 오늘의 다짐</h2>
+        <span className="text-xs text-gray-400">모각공 · 오늘 반드시 끝낸다! 다 같이 실시간 공유</span>
+      </div>
+
+      {/* 다짐 목록 */}
+      <div className="space-y-2 my-4">
+        {pledges.length === 0 && (
+          <p className="text-sm text-gray-400 text-center py-4">
+            아직 아무도 다짐을 남기지 않았어요. 첫 번째로 선언해보세요!
+          </p>
+        )}
+        {pledges.map((p) => (
+          <div
+            key={p.id}
+            className={[
+              "rounded-xl px-4 py-3 border",
+              p.verified ? "bg-[#FEFCE8] border-[#E9ED12]" : "bg-gray-50 border-gray-100",
+            ].join(" ")}
+          >
+            <p className="text-sm">{p.text}</p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="text-xs font-bold text-gray-700">{p.author}</span>
+              <span className="text-[10px] text-gray-400">{formatTime(p.createdAt)}</span>
+              <button
+                onClick={() => toggleVerify(p.id)}
+                className={[
+                  "ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full transition",
+                  p.verified
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200 text-gray-500 hover:bg-gray-300",
+                ].join(" ")}
+              >
+                {p.verified ? "✅ 인증 완료!" : "인증하기"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 입력 */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+          placeholder="닉네임"
+          className="w-20 shrink-0 px-3 py-2.5 rounded-lg border border-gray-200 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#E9ED12]"
+        />
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addPledge()}
+          placeholder="오늘 모각공에서 반드시 끝낸다! 다짐 남기기..."
+          className="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#E9ED12]"
+        />
+        <button
+          onClick={addPledge}
+          className="shrink-0 px-4 py-2.5 rounded-lg bg-[#E9ED12] text-[#1A1A1A] text-sm font-extrabold hover:opacity-90 transition"
+        >
+          다짐!
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── 대나무숲 게시판 ───
 type BambooPost = {
   id: string;
@@ -710,12 +834,10 @@ function BambooForest() {
               🎋 까스활명수 대나무숲
             </h2>
             <p className="text-sm text-[#C8E6A0] mt-1 font-bold">
-              무엇이든 물어보세요
+              궁금한 거 무엇이든 물어보세요!
             </p>
             <p className="text-xs text-[#A0C878] mt-2 leading-relaxed">
-              &ldquo;임금님 귀는 당나귀 귀&rdquo;처럼,
-              <br />
-              여기선 속에 있는 말을 그냥 외치면 돼요
+              누구나 서로 대답해줘요
             </p>
           </div>
 
@@ -726,9 +848,6 @@ function BambooForest() {
             </span>
             <span className="text-[11px] text-[#C8E6A0] bg-[#1A3A08] px-2.5 py-1 rounded-full">
               🔁 두 번 물어봐도 돼요
-            </span>
-            <span className="text-[11px] text-[#C8E6A0] bg-[#1A3A08] px-2.5 py-1 rounded-full">
-              🫂 지나가던 사람이 답해요
             </span>
           </div>
 
@@ -1067,6 +1186,11 @@ export default function OfficePage() {
               />
             ))}
           </div>
+        </div>
+
+        {/* ─── 오늘의 다짐 ─── */}
+        <div className="mb-8">
+          <PledgeBoard />
         </div>
 
         {/* ─── 대나무숲 ─── */}

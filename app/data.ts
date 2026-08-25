@@ -103,6 +103,7 @@ export const DEADLINE_ISO = "2026-08-30T09:00:00Z"; // UTC = KST 18:00
 export const MEMBERS: Member[] = [
   // 감독관
   { nick: "다니", name: "송다은", role: "감독관", statusType: "working", message: "여러분 화이팅! 💪" },
+  { nick: "제이", name: "장경선", role: "감독관", statusType: "watching" },
 
   // 유닛 멤버
   { nick: "헤이", name: "윤민홍", role: "멤버", statusType: "idle" },
