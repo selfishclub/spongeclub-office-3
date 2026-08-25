@@ -10,6 +10,8 @@ import {
   STATUS_CONFIG,
   HAIR_COLORS,
   SHIRT_COLORS,
+  ALL_CREWS,
+  CREW_ORDER,
   hashNick,
   type Member,
   type StatusType,
@@ -606,6 +608,126 @@ function BottleProgress({
   );
 }
 
+// ─── 내 카드 · 상태 올리기 ───
+function MyCard({
+  currentWeek,
+  weekData,
+  onUpdateStatus,
+}: {
+  currentWeek: number;
+  weekData: ReturnType<typeof WEEKS.find>;
+  onUpdateStatus: (nick: string, statusType: StatusType, message?: string) => void;
+}) {
+  const [selectedCrew, setSelectedCrew] = useState(CREW_ORDER[0]);
+  const [selectedNick, setSelectedNick] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<StatusType>("doing");
+  const [message, setMessage] = useState("");
+
+  const crewMembers = ALL_CREWS[selectedCrew] ?? [];
+
+  // 조 변경 시 첫 멤버로 초기화
+  useEffect(() => {
+    const members = ALL_CREWS[selectedCrew] ?? [];
+    if (members.length > 0) setSelectedNick(members[0].nick);
+  }, [selectedCrew]);
+
+  function handleSubmit() {
+    if (!selectedNick) return;
+    onUpdateStatus(selectedNick, selectedStatus, message || undefined);
+    setMessage("");
+  }
+
+  const statusTypes = Object.entries(STATUS_CONFIG) as [StatusType, typeof STATUS_CONFIG[StatusType]][];
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#E8E0D0] p-5">
+      {/* 헤더 */}
+      <h2 className="font-extrabold text-lg mb-1">🌿 내 카드 · {currentWeek}회차 미션</h2>
+      {weekData && (
+        <>
+          <p className="text-sm text-gray-500 mb-3">{weekData.title}</p>
+          {weekData.tasks.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {weekData.tasks.map((t, i) => (
+                <span key={i} className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-bold">
+                  {i + 1} {t.title}
+                </span>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* 제출자 선택 */}
+      <p className="text-sm font-bold text-gray-700 mb-2">
+        제출자 선택 <span className="text-gray-400 font-normal">(내 캐릭터 · 현재 {currentWeek}회차)</span>
+      </p>
+      <div className="flex gap-2 mb-5">
+        <select
+          value={selectedCrew}
+          onChange={(e) => setSelectedCrew(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-bold focus:outline-none focus:border-[#E9ED12]"
+        >
+          {CREW_ORDER.map((crew) => (
+            <option key={crew} value={crew}>{crew}</option>
+          ))}
+        </select>
+        <select
+          value={selectedNick}
+          onChange={(e) => setSelectedNick(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-bold focus:outline-none focus:border-[#E9ED12]"
+        >
+          {crewMembers.map((m) => (
+            <option key={m.nick} value={m.nick}>👑 {m.nick} ({m.name})</option>
+          ))}
+        </select>
+      </div>
+
+      {/* 내 상태 */}
+      <p className="text-sm font-bold text-gray-700 mb-2">내 상태</p>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {statusTypes.map(([type, config]) => (
+          <button
+            key={type}
+            onClick={() => setSelectedStatus(type)}
+            className={[
+              "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition",
+              selectedStatus === type
+                ? "border-[#E9ED12] bg-[#E9ED12] text-[#1A1A1A]"
+                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300",
+            ].join(" ")}
+          >
+            {config.emoji} {config.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 상태 메시지 */}
+      <div className="relative mb-4">
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value.slice(0, 40))}
+          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+          placeholder="상태 메시지 한 줄 (선택, 이모지 OK)"
+          className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#E9ED12]"
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">
+          {message.length}/40
+        </span>
+      </div>
+
+      {/* 상태 올리기 버튼 */}
+      <button
+        onClick={handleSubmit}
+        className="px-6 py-2.5 rounded-xl bg-[#E9ED12] text-[#1A1A1A] font-extrabold text-sm hover:opacity-90 transition"
+      >
+        상태 올리기
+      </button>
+    </div>
+  );
+}
+
 // ─── 오늘의 다짐 (모각공) ───
 type Pledge = {
   id: string;
@@ -1196,6 +1318,15 @@ export default function OfficePage() {
         {/* ─── 대나무숲 ─── */}
         <div className="mb-8">
           <BambooForest />
+        </div>
+
+        {/* ─── 내 카드 ─── */}
+        <div className="mb-8">
+          <MyCard
+            currentWeek={selectedWeek}
+            weekData={weekData}
+            onUpdateStatus={updateStatus}
+          />
         </div>
       </div>
 
